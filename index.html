@@ -1,66 +1,176 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chat Assistant</title>
-    <link
-      href="https://fonts.googleapis.com/icon?family=Material+Icons"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="style.css" />
-  </head>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>L'Oréal Beauty Chatbot</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Helvetica Neue", sans-serif;
+      background: #f7f7f7;
+      color: #333;
+    }
+    header {
+      background: #000;
+      color: #fff;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.5rem;
+      letter-spacing: 1px;
+    }
+    .gallery {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+      padding: 1rem;
+    }
+    .card {
+      width: 180px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      overflow: hidden;
+      text-align: center;
+      cursor: pointer;
+    }
+    .card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+    .card a {
+      text-decoration: none;
+      color: #111;
+      display: block;
+      padding: 0.5rem;
+    }
+    .chat-container {
+      max-width: 600px;
+      margin: 2rem auto;
+      background: white;
+      border-radius: 10px;
+      padding: 1rem;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .chat-box {
+      height: 300px;
+      overflow-y: auto;
+      padding: 1rem;
+      border-bottom: 1px solid #ddd;
+    }
+    .user, .bot {
+      margin-bottom: 1rem;
+    }
+    .user span, .bot span {
+      display: inline-block;
+      padding: 0.6rem 1rem;
+      border-radius: 20px;
+      max-width: 80%;
+    }
+    .user span {
+      background: #e6f0ff;
+      align-self: flex-end;
+    }
+    .bot span {
+      background: #f1f1f1;
+    }
+    .input-area {
+      display: flex;
+      padding: 1rem;
+    }
+    .input-area input {
+      flex: 1;
+      padding: 0.6rem;
+      border-radius: 20px;
+      border: 1px solid #ccc;
+      margin-right: 1rem;
+    }
+    .input-area button {
+      background: black;
+      color: white;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
 
-  <body>
-    <div class="page-wrapper">
-      <!------- Header / Branding ------->
-      <header class="site-header">
-        <h1 class="site-title">Smart Product Advisor</h1>
-      </header>
+  <header>L'Oréal Beauty Chatbot</header>
 
-      <!------- Chat Area ------->
-      <main>
-        <section class="chatbox">
-          <div id="chatWindow" class="chat-window">
-            <!-- messages will be appended here via JS -->
-          </div>
+  <div class="gallery" id="productGallery"></div>
 
-          <form id="chatForm" class="chat-form">
-            <label for="userInput" class="visually-hidden">Message</label>
-            <input
-              id="userInput"
-              name="userInput"
-              type="text"
-              placeholder="Ask me about products or routines…"
-              autocomplete="off"
-              required
-            />
-            <button type="submit" id="sendBtn">
-              <span class="material-icons">send</span>
-              <span class="visually-hidden">Send</span>
-            </button>
-          </form>
-        </section>
-      </main>
-
-      <!------- Footer Links ------->
-      <footer class="site-footer">
-        <p>&copy; 2025 Company Name. All rights reserved.</p>
-        <nav>
-          <!-- These URLs are placeholders -->
-          <a href="#">Privacy Policy</a>
-          <a href="#">Terms of Use</a>
-          <a href="#">Contact</a>
-        </nav>
-      </footer>
+  <div class="chat-container">
+    <div class="chat-box" id="chatBox"></div>
+    <div class="input-area">
+      <input type="text" id="userInput" placeholder="Ask about a product..."/>
+      <button onclick="handleUserMessage()">Send</button>
     </div>
+  </div>
 
-    <!-- secrets.js can be removed when using Cloudflare Workers for API requests -->
-    <script src="secrets.js"></script>
-    <script src="script.js"></script>
-  </body>
+  <script>
+    const products = [
+      { name: "True Match Foundation", image: "https://raw.githubusercontent.com/yourusername/loreal-site-assets/main/true-match.jpg", link: "https://www.lorealparisusa.com/products/makeup/face/foundation/true-match-super-blendable-foundation", prompt: "Tell me about L'Oréal True Match Foundation." },
+      { name: "Voluminous Mascara", image: "https://raw.githubusercontent.com/yourusername/loreal-site-assets/main/voluminous.jpg", link: "https://www.lorealparisusa.com/products/makeup/eye/mascara/voluminous-original-mascara", prompt: "What are the benefits of L'Oréal Voluminous Mascara?" },
+      { name: "Revitalift Serum", image: "https://raw.githubusercontent.com/yourusername/loreal-site-assets/main/revitalift.jpg", link: "https://www.lorealparisusa.com/products/skincare/anti-aging/revitalift-derm-intensives-10-pure-glycolic-acid-serum", prompt: "How does L'Oréal Revitalift Serum help the skin?" },
+      { name: "Infallible Lipstick", image: "https://raw.githubusercontent.com/yourusername/loreal-site-assets/main/infallible-lipstick.jpg", link: "https://www.lorealparisusa.com/products/makeup/lip-color/lipstick/infallible-pro-matte-les-macaron-liquid-lipstick", prompt: "Give me a description of L'Oréal Infallible Lipstick." },
+      { name: "Elvive Hair Mask", image: "https://raw.githubusercontent.com/yourusername/loreal-site-assets/main/elvive-mask.jpg", link: "https://www.lorealparisusa.com/products/hair-care/treatments/hair-mask/elvive-total-repair-5-damage-erasing-balm", prompt: "How to use the L'Oréal Elvive Hair Mask?" },
+      { name: "Hydra Genius Moisturizer", image: "https://raw.githubusercontent.com/yourusername/loreal-site-assets/main/hydra-genius.jpg", link: "https://www.lorealparisusa.com/products/skincare/moisturizers/hydra-genius-daily-liquid-care-normal-dry-skin", prompt: "Tell me how L'Oréal Hydra Genius Moisturizer works." }
+    ];
+
+    const predefinedAnswers = {
+      "true match": "L'Oréal True Match Foundation offers natural, buildable coverage with a lightweight formula. It’s designed to match your skin tone and undertone precisely.",
+      "voluminous mascara": "L'Oréal Voluminous Mascara is designed to separate and build lashes for a full, voluminous effect. It resists clumping and gives a bold lash look.",
+      "revitalift serum": "Revitalift Serum contains glycolic acid to smooth fine lines and improve skin texture. It’s part of L’Oréal’s anti-aging skincare line.",
+      "infallible lipstick": "Infallible Lipstick offers long-wearing, high-pigment color with a matte finish. It’s known for its staying power and comfort.",
+      "elvive hair mask": "The Elvive Hair Mask repairs damaged hair using protein and almond oil. Apply after shampooing and leave on for 3–5 minutes.",
+      "hydra genius": "Hydra Genius Moisturizer is water-based and infused with aloe water and hyaluronic acid. It delivers deep hydration without greasiness."
+    };
+
+    const gallery = document.getElementById('productGallery');
+    const chatBox = document.getElementById('chatBox');
+
+    products.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <a href="${p.link}" target="_blank">
+          <img src="${p.image}" alt="${p.name}" />
+          <div>${p.name}</div>
+        </a>
+      `;
+      card.onclick = () => {
+        document.getElementById("userInput").value = p.prompt;
+        handleUserMessage();
+      };
+      gallery.appendChild(card);
+    });
+
+    function handleUserMessage() {
+      const input = document.getElementById("userInput");
+      const userText = input.value.trim();
+      if (!userText) return;
+
+      chatBox.innerHTML += `<div class="user"><span>${userText}</span></div>`;
+      input.value = "";
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      let reply = "I'm sorry, I can only answer questions about L'Oréal products and beauty routines.";
+      for (const key in predefinedAnswers) {
+        if (userText.toLowerCase().includes(key)) {
+          reply = predefinedAnswers[key];
+        }
+      }
+
+      setTimeout(() => {
+        chatBox.innerHTML += `<div class="bot"><span>${reply}</span></div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }, 600);
+    }
+  </script>
+
+</body>
 </html>
